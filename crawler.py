@@ -44,6 +44,7 @@ def crawler(cmdline=None):
         end = args.i[1]
         index = start
         filename = board + '-' + str(start) + '-' + str(end) + '.json'
+        store(filename, u'{"articles": [\n', 'w')
         for i in range(end-start+1):
             index = start + i
             print('Processing index:', str(index))
@@ -55,7 +56,6 @@ def crawler(cmdline=None):
                 print('invalid url:', resp.url)
                 continue
             soup = BeautifulSoup(resp.text)
-            store(filename, u'{"articles": [\n', 'w')
             divs = soup.find_all("div", "r-ent")
             for div in divs:
                 try:
@@ -63,14 +63,14 @@ def crawler(cmdline=None):
                     href = div.find('a')['href']
                     link = PTT_URL + href
                     article_id = re.sub('\.html', '', href.split('/')[-1])
-                    if div == divs[-1]:  # last div
+                    if div == divs[-1] and i == end-start:  # last div of last page
                         store(filename, parse(link, article_id, board) + '\n', 'a')
                     else:
                         store(filename, parse(link, article_id, board) + ',\n', 'a')
                 except:
                     pass
-                time.sleep(0.1)
-            store(filename, u']}', 'a')
+            time.sleep(0.1)
+        store(filename, u']}', 'a')
     else:  # args.a
         article_id = args.a
         link = PTT_URL + '/bbs/' + board + '/' + article_id + '.html'
