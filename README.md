@@ -1,6 +1,6 @@
 # ptt-web-crawler (PTT 網路版爬蟲) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
 
-特色:
+特色
 
 * 支援單篇及多篇文章抓取
 * 過濾資料內空白、空行及特殊字元
@@ -36,15 +36,15 @@
     }
 
 ### 執行方式
-    crawler.py -b 看板名稱 -i 起始索引 結束索引 
-    crawler.py -b 看板名稱 -a 文章ID 
+    python crawler.py -b 看板名稱 -i 起始索引 結束索引 
+    python crawler.py -b 看板名稱 -a 文章ID 
 
 ### 範例
-    crawler.py -b PublicServan -i 100 200
+    python crawler.py -b PublicServan -i 100 200
 
 會爬取 PublicServan 板第 100 頁 (https://www.ptt.cc/bbs/PublicServan/index100.html) 到第 200 頁 (https://www.ptt.cc/bbs/PublicServan/index200.html) 的內容，輸出至 `PublicServan-100-200.json`
 
-    crawler.py -b PublicServan -a M.1413618360.A.4F0
+    python crawler.py -b PublicServan -a M.1413618360.A.4F0
 
 會爬取 PublicServan 板文章 ID 為 M.1413618360.A.4F0 (https://www.ptt.cc/bbs/PublicServan/M.1413618360.A.4F0.html) 的內容，輸出至 `PublicServan-M.1413618360.A.4F0.json`
 
@@ -55,7 +55,7 @@
 
 ptt-web-crawler is a crawler for the web version of PTT, the largest online community in Taiwan. 
 
-    usage: crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -a ARTICLE_ID) [-v]
+    usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -a ARTICLE_ID) [-v]
     optional arguments:
       -h, --help                  show this help message and exit
       -b BOARD_NAME               Board name
