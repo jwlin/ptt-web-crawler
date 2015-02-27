@@ -128,7 +128,9 @@ def parse(link, article_id, board):
     for push in pushes:
         push_tag = push.find('span', 'push-tag').string.strip(' \t\n\r')
         push_userid = push.find('span', 'push-userid').string.strip(' \t\n\r')
-        push_content = push.find('span', 'push-content').string[1:].strip(' \t\n\r')  # remove ':'
+        # if find is None: find().strings -> list -> ' '.join; else the current way
+        push_content = push.find('span', 'push-content').strings
+        push_content = ' '.join(push_content)[1:].strip(' \t\n\r')  # remove ':'
         push_ipdatetime = push.find('span', 'push-ipdatetime').string.strip(' \t\n\r')
         messages.append( {'push_tag': push_tag, 'push_userid': push_userid, 'push_content': push_content, 'push_ipdatetime': push_ipdatetime} )
         if push_tag == u'推':

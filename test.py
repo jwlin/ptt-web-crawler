@@ -4,18 +4,28 @@ import crawler
 import codecs, json, os
 
 class TestCrawler(unittest.TestCase):
-    def setUp(self):
+    def test_parse(self):
         self.link = 'https://www.ptt.cc/bbs/PublicServan/M.1409529482.A.9D3.html'
         self.article_id = 'M.1409529482.A.9D3'
         self.board = 'PublicServan'
-
-    
-    def test_parse(self):
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
         self.assertEqual(jsondata['message_conut']['count'], 55)
     
+    def test_parse_with_structured_push_contents(self):
+        self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1425003598.A.630.html'
+        self.article_id = 'M.1425003598.A.630'
+        self.board = 'Gossiping'
+        jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
+        self.assertEqual(jsondata['article_id'], self.article_id)
+        self.assertEqual(jsondata['board'], self.board)
+        isCatched = False
+        for msg in jsondata['messages']:
+            if u'http://ppt.cc/FMSc' in msg['push_content']:
+                isCatched = True
+        self.assertTrue(isCatched)
+
     
     def test_crawler(self):
         crawler.crawler(['-b', 'PublicServan', '-i', '1', '2'])
