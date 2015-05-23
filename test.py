@@ -14,19 +14,18 @@ class TestCrawler(unittest.TestCase):
         self.assertEqual(jsondata['message_conut']['count'], 55)
     
     def test_parse_with_structured_push_contents(self):
-        self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1425003598.A.630.html'
-        self.article_id = 'M.1425003598.A.630'
+        self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1119222660.A.94E.html'
+        self.article_id = 'M.1119222660.A.94E'
         self.board = 'Gossiping'
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
         isCatched = False
         for msg in jsondata['messages']:
-            if u'http://ppt.cc/FMSc' in msg['push_content']:
+            if u'http://tinyurl.com/4arw47s' in msg['push_content']:
                 isCatched = True
         self.assertTrue(isCatched)
 
-    
     def test_crawler(self):
         crawler.crawler(['-b', 'PublicServan', '-i', '1', '2'])
         filename = 'PublicServan-1-2.json'
@@ -35,7 +34,7 @@ class TestCrawler(unittest.TestCase):
             # M.1127808641.A.C03.html is empty, so decrease 1 from 40 articles
             self.assertEqual(len(data['articles']), 39)  
             os.remove(filename)
-    
+
 
 if __name__ == '__main__':
     unittest.main()
