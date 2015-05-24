@@ -15,12 +15,12 @@ def home(request):
             'demo/demo.html',
         )
     elif request.method == 'POST' and request.is_ajax():
-        bname = request.POST.get('board_name')
-        aid = request.POST.get('article_id')
-        if bname and aid:
-            bname = escape(bname)
-            aid = escape(aid)
-        if aid == 'latest' or aid == 'index':
+        bname = escape(request.POST.get('board_name'))
+        aid = escape(request.POST.get('article_id'))
+        link = PTT_URL + '/bbs/' + bname + '/' + aid + '.html'
+        if not (bname and aid):
+            return HttpResponse(json.dumps({'data': {'error': 'invalid url'}, 'link': link}), content_type='application/json')
+        if aid.lower() == 'latest' or aid.lower() == 'index':
             resp = requests.get(
                 url=PTT_URL + '/bbs/' + bname + '/index.html',
                 cookies={'over18': '1'}, verify=False
