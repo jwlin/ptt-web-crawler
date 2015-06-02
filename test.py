@@ -26,14 +26,30 @@ class TestCrawler(unittest.TestCase):
                 isCatched = True
         self.assertTrue(isCatched)
 
+    def test_parse_with_push_without_contents(self):
+        self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1433091897.A.1C5.html'
+        self.article_id = 'M.1433091897.A.1C5'
+        self.board = 'Gossiping'
+        jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
+        self.assertEqual(jsondata['article_id'], self.article_id)
+        self.assertEqual(jsondata['board'], self.board)
+
+    def test_parse_without_metalines(self):
+        self.link = 'https://www.ptt.cc/bbs/NBA/M.1432438578.A.4B0.html'
+        self.article_id = 'M.1432438578.A.4B0'
+        self.board = 'NBA'
+        jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
+        self.assertEqual(jsondata['article_id'], self.article_id)
+        self.assertEqual(jsondata['board'], self.board)
+
     def test_crawler(self):
         crawler.crawler(['-b', 'PublicServan', '-i', '1', '2'])
         filename = 'PublicServan-1-2.json'
         with codecs.open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
             # M.1127808641.A.C03.html is empty, so decrease 1 from 40 articles
-            self.assertEqual(len(data['articles']), 39)  
-            os.remove(filename)
+            self.assertEqual(len(data['articles']), 39)
+        os.remove(filename)
 
 
 if __name__ == '__main__':

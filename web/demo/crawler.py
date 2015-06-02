@@ -83,19 +83,23 @@ def parse(link, article_id, board):
     resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY)
     if resp.status_code != 200:
         print('invalid url:', resp.url)
-        return '{"error": "invalid url"}'
+        return json.dumps({"error": "invalid url"}, indent=4, sort_keys=True, ensure_ascii=False)
     soup = BeautifulSoup(resp.text)
     main_content = soup.find(id="main-content")
     metas = main_content.select('div.article-metaline')
-    author = metas[0].select('span.article-meta-value')[0].string
-    title = metas[1].select('span.article-meta-value')[0].string
-    date = metas[2].select('span.article-meta-value')[0].string
+    author = ''
+    title = ''
+    date = ''
+    if metas:
+        author = metas[0].select('span.article-meta-value')[0].string if metas[0].select('span.article-meta-value')[0] else author
+        title = metas[1].select('span.article-meta-value')[0].string if metas[1].select('span.article-meta-value')[0] else title
+        date = metas[2].select('span.article-meta-value')[0].string if metas[2].select('span.article-meta-value')[0] else date
 
-    # remove meta nodes
-    for meta in metas:
-        meta.extract()
-    for meta in main_content.select('div.article-metaline-right'):
-        meta.extract()
+        # remove meta nodes
+        for meta in metas:
+            meta.extract()
+        for meta in main_content.select('div.article-metaline-right'):
+            meta.extract()
 
     # remove and keep push nodes
     pushes = main_content.find_all('div', class_='push')
@@ -124,8 +128,9 @@ def parse(link, article_id, board):
     # push messages
     p, b, n = 0, 0, 0
     messages = []
-    message_count = {}
     for push in pushes:
+        if not push.find('span', 'push-tag'):
+            continue
         push_tag = push.find('span', 'push-tag').string.strip(' \t\n\r')
         push_userid = push.find('span', 'push-userid').string.strip(' \t\n\r')
         # if find is None: find().strings -> list -> ' '.join; else the current way
@@ -147,7 +152,7 @@ def parse(link, article_id, board):
     # print 'mscounts', message_count
 
     # json data
-    d = {
+    data = {
         'board': board,
         'article_id': article_id,
         'article_title': title,
@@ -159,7 +164,7 @@ def parse(link, article_id, board):
         'messages': messages
     }
     # print 'original:', d
-    return json.dumps(d, indent=4, sort_keys=True, ensure_ascii=False)
+    return json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False)
 
 
 def store(filename, data, mode):
