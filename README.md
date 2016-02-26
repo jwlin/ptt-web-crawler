@@ -1,6 +1,6 @@
 # ptt-web-crawler (PTT 網路版爬蟲) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
 
-[Live demo](http://app.castman.net/ptt-web-crawler)
+### [Live demo](http://app.castman.net/ptt-web-crawler)
 
 特色
 
@@ -38,7 +38,7 @@
     }
 
 ### 執行方式
-    python crawler.py -b 看板名稱 -i 起始索引 結束索引 
+    python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為 -1 則自動計算最後一頁) 
     python crawler.py -b 看板名稱 -a 文章ID 
 
 ### 範例
