@@ -1,7 +1,12 @@
 # vim: set ts=4 sw=4 et: -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
-
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
 import re
 import sys
 import json
@@ -41,7 +46,10 @@ def crawler(cmdline=None):
     PTT_URL = 'https://www.ptt.cc'
     if args.i:
         start = args.i[0]
-        end = args.i[1]
+        if args.i[1] == -1:
+            end = getLastPage(board)
+        else:
+            end = args.i[1]
         index = start
         filename = board + '-' + str(start) + '-' + str(end) + '.json'
         store(filename, u'{"articles": [\n', 'w')
@@ -118,7 +126,7 @@ def parse(link, article_id, board):
     expr = re.compile(u(r'[^\u4e00-\u9fa5\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\s\w:/-_.?~%()]'))
     for i in range(len(filtered)):
         filtered[i] = re.sub(expr, '', filtered[i])
-    
+
     filtered = [_f for _f in filtered if _f]  # remove empty strings
     filtered = [x for x in filtered if article_id not in x]  # remove last line containing the url of the article
     content = ' '.join(filtered)
@@ -166,6 +174,10 @@ def parse(link, article_id, board):
     # print 'original:', d
     return json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False)
 
+def getLastPage(board):
+    content = urlopen('https://www.ptt.cc/bbs/' + board + '/index.html').read().decode('utf-8')
+    first_page = re.search(r'href="/bbs/' + board + '/index(\d+).html">&lsaquo;', content).group(1)
+    return int(first_page) + 1
 
 def store(filename, data, mode):
     with codecs.open(filename, mode, encoding='utf-8') as f:
