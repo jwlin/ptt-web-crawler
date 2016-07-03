@@ -1,12 +1,7 @@
 # vim: set ts=4 sw=4 et: -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
-try:
-    # For Python 3.0 and later
-    from urllib.request import urlopen
-except ImportError:
-    # Fall back to Python 2's urllib2
-    from urllib2 import urlopen
+
 import re
 import sys
 import json
@@ -174,14 +169,20 @@ def parse(link, article_id, board):
     # print 'original:', d
     return json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False)
 
+
 def getLastPage(board):
-    content = urlopen('https://www.ptt.cc/bbs/' + board + '/index.html').read().decode('utf-8')
+    content = requests.get(
+        url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
+        cookies={'over18': '1'}
+    ).content.decode('utf-8')
     first_page = re.search(r'href="/bbs/' + board + '/index(\d+).html">&lsaquo;', content).group(1)
     return int(first_page) + 1
+
 
 def store(filename, data, mode):
     with codecs.open(filename, mode, encoding='utf-8') as f:
         f.write(data)
+
 
 if __name__ == '__main__':
     crawler()

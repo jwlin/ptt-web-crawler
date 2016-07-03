@@ -39,6 +39,7 @@ class TestCrawler(unittest.TestCase):
         self.article_id = 'M.1432438578.A.4B0'
         self.board = 'NBA'
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
+        #print jsondata
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
 
@@ -50,6 +51,14 @@ class TestCrawler(unittest.TestCase):
             # M.1127808641.A.C03.html is empty, so decrease 1 from 40 articles
             self.assertEqual(len(data['articles']), 39)
         os.remove(filename)
+	
+    def test_getLastPage(self):
+        boards = ['NBA', 'Gossiping']
+        for board in boards:
+            try:
+                _ = crawler.getLastPage(board)
+            except:
+                self.fail("getLastPage() raised Exception.")
 
 
 if __name__ == '__main__':
