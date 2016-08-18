@@ -175,8 +175,10 @@ def getLastPage(board):
         url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
         cookies={'over18': '1'}
     ).content.decode('utf-8')
-    first_page = re.search(r'href="/bbs/' + board + '/index(\d+).html">&lsaquo;', content).group(1)
-    return int(first_page) + 1
+    first_page = re.search(r'href="/bbs/' + board + '/index(\d+).html">&lsaquo;', content)
+    if first_page is None:
+        return 1
+    return int(first_page.group(1)) + 1
 
 
 def store(filename, data, mode):
