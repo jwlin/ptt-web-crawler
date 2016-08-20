@@ -53,7 +53,7 @@ class TestCrawler(unittest.TestCase):
         os.remove(filename)
 	
     def test_getLastPage(self):
-        boards = ['NBA', 'Gossiping']
+        boards = ['NBA', 'Gossiping', 'b994060work']  # b994060work for 6259fc0 (pull/6)
         for board in boards:
             try:
                 _ = crawler.getLastPage(board)
