@@ -47,7 +47,7 @@ def crawler(cmdline=None):
             end = args.i[1]
         index = start
         filename = board + '-' + str(start) + '-' + str(end) + '.json'
-        store(filename, u'{"articles": [\n', 'w')
+        store(filename, u'{"articles": [', 'w')
         for i in range(end-start+1):
             index = start + i
             print('Processing index:', str(index))
@@ -67,9 +67,9 @@ def crawler(cmdline=None):
                     link = PTT_URL + href
                     article_id = re.sub('\.html', '', href.split('/')[-1])
                     if div == divs[-1] and i == end-start:  # last div of last page
-                        store(filename, parse(link, article_id, board) + '\n', 'a')
+                        store(filename, parse(link, article_id, board), 'a')
                     else:
-                        store(filename, parse(link, article_id, board) + ',\n', 'a')
+                        store(filename, parse(link, article_id, board) + ',', 'a')
                 except:
                     pass
             time.sleep(0.1)
@@ -86,7 +86,7 @@ def parse(link, article_id, board):
     resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY)
     if resp.status_code != 200:
         print('invalid url:', resp.url)
-        return json.dumps({"error": "invalid url"}, indent=4, sort_keys=True, ensure_ascii=False)
+        return json.dumps({"error": "invalid url"}, sort_keys=True, ensure_ascii=False)
     soup = BeautifulSoup(resp.text)
     main_content = soup.find(id="main-content")
     metas = main_content.select('div.article-metaline')
@@ -167,7 +167,7 @@ def parse(link, article_id, board):
         'messages': messages
     }
     # print 'original:', d
-    return json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False)
+    return json.dumps(data, sort_keys=True, ensure_ascii=False)
 
 
 def getLastPage(board):
