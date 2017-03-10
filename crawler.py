@@ -125,7 +125,6 @@ def parse(link, article_id, board):
     filtered = [_f for _f in filtered if _f]  # remove empty strings
     filtered = [x for x in filtered if article_id not in x]  # remove last line containing the url of the article
     content = ' '.join(filtered)
-    content = re.sub(r'(\s)+', ' ', content)
     # print 'content', content
 
     # push messages
