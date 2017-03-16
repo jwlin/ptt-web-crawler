@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name = 'PttWebCrawler',
-    packages = ['ptt-web-crawler'],
+    packages = ['PttWebCrawler'],
     version = '1.4',
     description = 'ptt web crawler',
     author = '',
