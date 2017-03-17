@@ -42,7 +42,10 @@
     python crawler.py -b 看板名稱 -a 文章ID 
 
 ### 範例
-    python crawler.py -b PublicServan -i 100 200
+    * 直接執行腳本:`python crawler.py -b PublicServan -i 100 200`
+    * 呼叫package:
+        * install:`python setup.py install`
+        * 直接:`python -m PttWebCrawler -b PublicServan -i 100 200`
 
 會爬取 PublicServan 板第 100 頁 (https://www.ptt.cc/bbs/PublicServan/index100.html) 到第 200 頁 (https://www.ptt.cc/bbs/PublicServan/index200.html) 的內容，輸出至 `PublicServan-100-200.json`
 
