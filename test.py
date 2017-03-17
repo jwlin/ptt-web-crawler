@@ -1,6 +1,6 @@
 # vim: set ts=4 sw=4 et: -*- coding: utf-8 -*-
 import unittest
-import crawler
+from PttWebCrawler.crawler import PttWebCrawler as crawler
 import codecs, json, os
 
 class TestCrawler(unittest.TestCase):
@@ -8,6 +8,7 @@ class TestCrawler(unittest.TestCase):
         self.link = 'https://www.ptt.cc/bbs/PublicServan/M.1409529482.A.9D3.html'
         self.article_id = 'M.1409529482.A.9D3'
         self.board = 'PublicServan'
+
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
@@ -17,6 +18,7 @@ class TestCrawler(unittest.TestCase):
         self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1119222660.A.94E.html'
         self.article_id = 'M.1119222660.A.94E'
         self.board = 'Gossiping'
+
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
@@ -30,6 +32,7 @@ class TestCrawler(unittest.TestCase):
         self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1433091897.A.1C5.html'
         self.article_id = 'M.1433091897.A.1C5'
         self.board = 'Gossiping'
+
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
@@ -38,13 +41,14 @@ class TestCrawler(unittest.TestCase):
         self.link = 'https://www.ptt.cc/bbs/NBA/M.1432438578.A.4B0.html'
         self.article_id = 'M.1432438578.A.4B0'
         self.board = 'NBA'
+
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         #print jsondata
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
 
     def test_crawler(self):
-        crawler.crawler(['-b', 'PublicServan', '-i', '1', '2'])
+        crawler(['-b', 'PublicServan', '-i', '1', '2'])
         filename = 'PublicServan-1-2.json'
         with codecs.open(filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -54,6 +58,7 @@ class TestCrawler(unittest.TestCase):
 	
     def test_getLastPage(self):
         boards = ['NBA', 'Gossiping', 'b994060work']  # b994060work for 6259fc0 (pull/6)
+
         for board in boards:
             try:
                 _ = crawler.getLastPage(board)
