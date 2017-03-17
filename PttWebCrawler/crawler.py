@@ -21,7 +21,7 @@ if sys.version_info[0] < 3:
     requests.packages.urllib3.disable_warnings()
 
 class PttWebCrawler(object):
-    """docstring for ptt_web_crawler"""
+    """docstring for PttWebCrawler"""
     def __init__(self, cmdline=None):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
             A crawler for the web version of PTT, the largest online community in Taiwan.
@@ -37,7 +37,7 @@ class PttWebCrawler(object):
         if cmdline:
             args = parser.parse_args(cmdline)
         else:
-           args = parser.parse_args()
+            args = parser.parse_args()
         board = args.b
         PTT_URL = 'https://www.ptt.cc'
         if args.i:
@@ -81,7 +81,8 @@ class PttWebCrawler(object):
             filename = board + '-' + article_id + '.json'
             self.store(filename, self.parse(link, article_id, board), 'w')
 
-    def parse(self, link, article_id, board):
+    @staticmethod
+    def parse(link, article_id, board):
         print('Processing article:', article_id)
         resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY)
         if resp.status_code != 200:
@@ -169,8 +170,8 @@ class PttWebCrawler(object):
         # print 'original:', d
         return json.dumps(data, sort_keys=True, ensure_ascii=False)
 
-
-    def getLastPage(self, board):
+    @staticmethod
+    def getLastPage(board):
         content = requests.get(
             url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
             cookies={'over18': '1'}
@@ -180,11 +181,16 @@ class PttWebCrawler(object):
             return 1
         return int(first_page.group(1)) + 1
 
-
-    def store(self, filename, data, mode):
+    @staticmethod
+    def store(filename, data, mode):
         with codecs.open(filename, mode, encoding='utf-8') as f:
             f.write(data)
 
+    @staticmethod
+    def get():
+        with codecs.open(filename, mode, encoding='utf-8') as f:
+            j = json.load(f)
+            print(f)
 
 if __name__ == '__main__':
-    c = ptt_web_crawler()
+    c = PttWebCrawler(['-b', 'PublicServan', '-i', '1', '2'])
