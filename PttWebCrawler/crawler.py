@@ -70,7 +70,7 @@ class PttWebCrawler(object):
                         if div == divs[-1] and i == end-start:  # last div of last page
                             self.store(filename, self.parse(link, article_id, board), 'a')
                         else:
-                            self.store(filename, self.parse(link, article_id, board) + ',', 'a')
+                            self.store(filename, self.parse(link, article_id, board) + ',\n', 'a')
                     except:
                         pass
                 time.sleep(0.1)
