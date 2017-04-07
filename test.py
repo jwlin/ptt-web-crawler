@@ -12,7 +12,7 @@ class TestCrawler(unittest.TestCase):
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
-        self.assertEqual(jsondata['message_conut']['count'], 55)
+        self.assertEqual(jsondata['message_conut']['count'], 57)
     
     def test_parse_with_structured_push_contents(self):
         self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1119222660.A.94E.html'

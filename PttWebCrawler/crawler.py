@@ -59,7 +59,7 @@ class PttWebCrawler(object):
                 if resp.status_code != 200:
                     print('invalid url:', resp.url)
                     continue
-                soup = BeautifulSoup(resp.text)
+                soup = BeautifulSoup(resp.text, 'html.parser')
                 divs = soup.find_all("div", "r-ent")
                 for div in divs:
                     try:
@@ -88,7 +88,7 @@ class PttWebCrawler(object):
         if resp.status_code != 200:
             print('invalid url:', resp.url)
             return json.dumps({"error": "invalid url"}, sort_keys=True, ensure_ascii=False)
-        soup = BeautifulSoup(resp.text)
+        soup = BeautifulSoup(resp.text, 'html.parser')
         main_content = soup.find(id="main-content")
         metas = main_content.select('div.article-metaline')
         author = ''
