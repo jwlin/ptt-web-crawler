@@ -193,4 +193,4 @@ class PttWebCrawler(object):
             print(f)
 
 if __name__ == '__main__':
-    c = PttWebCrawler(['-b', 'PublicServan', '-i', '1', '2'])
+    c = PttWebCrawler()
