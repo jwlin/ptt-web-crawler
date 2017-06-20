@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
 import re
 import sys
 import json
@@ -9,6 +10,7 @@ import requests
 import argparse
 import time
 import codecs
+from datetime import datetime
 from bs4 import BeautifulSoup
 from six import u
 
@@ -22,7 +24,7 @@ if sys.version_info[0] < 3:
 
 class PttWebCrawler(object):
     """docstring for PttWebCrawler"""
-    def __init__(self, cmdline=None, filename=None):
+    def __init__(self, cmdline=None):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
             A crawler for the web version of PTT, the largest online community in Taiwan.
             Input: board name and page indices (or articla ID)
@@ -45,9 +47,7 @@ class PttWebCrawler(object):
             end = self.getLastPage(board) if args.i[1] == -1 else args.i[1]
 
             index = start
-            if not filename:
-                filename = board + '-' + str(start) + '-' + str(end) + '.json'
-            self.store(filename, u'{"articles": [', 'w')
+            dirname = os.path.join('data', board)
             for i in range(end-start+1):
                 index = start + i
                 print('Processing index:', str(index))
@@ -66,14 +66,15 @@ class PttWebCrawler(object):
                         href = div.find('a')['href']
                         link = PTT_URL + href
                         article_id = re.sub('\.html', '', href.split('/')[-1])
-                        if div == divs[-1] and i == end-start:  # last div of last page
-                            self.store(filename, self.parse(link, article_id, board), 'a')
-                        else:
-                            self.store(filename, self.parse(link, article_id, board) + ',\n', 'a')
-                    except:
-                        pass
+                        data = self.parse(link, article_id, board, out='dict')
+                        filename = os.path.join(dirname, self.pttftime(data['date']), str(article_id)+'.json')
+                        self.checkExist(filename)
+                        self.store(filename, json.dumps(data, sort_keys=True, ensure_ascii=False), 'a')
+                    except Exception as e:
+                        exc_type, exc_obj, exc_tb = sys.exc_info()
+                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        print(exc_type, fname, exc_tb.tb_lineno)
                 time.sleep(0.1)
-            self.store(filename, u']}', 'a')
         else:  # args.a
             article_id = args.a
             link = PTT_URL + '/bbs/' + board + '/' + article_id + '.html'
@@ -81,7 +82,17 @@ class PttWebCrawler(object):
             self.store(filename, self.parse(link, article_id, board), 'w')
 
     @staticmethod
-    def parse(link, article_id, board):
+    def pttftime(date):
+        return datetime.strptime(date, '%a %b %d %H:%M:%S %Y').strftime('%Y%m%d')
+
+    @staticmethod
+    def checkExist(filename):
+        dirname = os.sep.join(filename.split(os.sep)[:-1])
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+    @staticmethod
+    def parse(link, article_id, board, out='json'):
         print('Processing article:', article_id)
         resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY)
         if resp.status_code != 200:
@@ -167,7 +178,10 @@ class PttWebCrawler(object):
             'messages': messages
         }
         # print 'original:', d
-        return json.dumps(data, sort_keys=True, ensure_ascii=False)
+        if out == 'json':
+            return json.dumps(data, sort_keys=True, ensure_ascii=False)
+        else:
+            return data
 
     @staticmethod
     def getLastPage(board):
