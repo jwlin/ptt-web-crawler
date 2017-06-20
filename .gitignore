@@ -56,3 +56,6 @@ target/
 
 # PyCharm
 .idea/
+
+# user-defined
+data/
