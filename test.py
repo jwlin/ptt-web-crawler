@@ -13,7 +13,7 @@ class TestCrawler(unittest.TestCase):
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
         self.assertEqual(jsondata['message_conut']['count'], 57)
-    
+
     def test_parse_with_structured_push_contents(self):
         self.link = 'https://www.ptt.cc/bbs/Gossiping/M.1119222660.A.94E.html'
         self.article_id = 'M.1119222660.A.94E'
@@ -55,7 +55,7 @@ class TestCrawler(unittest.TestCase):
             # M.1127808641.A.C03.html is empty, so decrease 1 from 40 articles
             self.assertEqual(len(data['articles']), 39)
         os.remove(filename)
-	
+
     def test_getLastPage(self):
         boards = ['NBA', 'Gossiping', 'b994060work']  # b994060work for 6259fc0 (pull/6)
 

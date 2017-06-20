@@ -22,7 +22,7 @@ if sys.version_info[0] < 3:
 
 class PttWebCrawler(object):
     """docstring for PttWebCrawler"""
-    def __init__(self, cmdline=None):
+    def __init__(self, cmdline=None, filename=None):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
             A crawler for the web version of PTT, the largest online community in Taiwan.
             Input: board name and page indices (or articla ID)
@@ -42,12 +42,11 @@ class PttWebCrawler(object):
         PTT_URL = 'https://www.ptt.cc'
         if args.i:
             start = args.i[0]
-            if args.i[1] == -1:
-                end = self.getLastPage(board)
-            else:
-                end = args.i[1]
+            end = self.getLastPage(board) if args.i[1] == -1 else args.i[1]
+
             index = start
-            filename = board + '-' + str(start) + '-' + str(end) + '.json'
+            if not filename:
+                filename = board + '-' + str(start) + '-' + str(end) + '.json'
             self.store(filename, u'{"articles": [', 'w')
             for i in range(end-start+1):
                 index = start + i
