@@ -51,8 +51,6 @@ class TestCrawler(unittest.TestCase):
         crawler(['-b', 'PublicServan', '-i', '1', '2'])
         dirname = 'data/PublicServan'
         filenames = glob.glob(dirname + '/**/*.json')
-        print(filenames)
-        print(len(filenames))
         self.assertEqual(len(filenames), 39)
         shutil.rmtree(dirname)
 
