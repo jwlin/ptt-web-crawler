@@ -33,26 +33,26 @@ class PttWebCrawler(object):
         parser.add_argument('-b', metavar='BOARD_NAME', help='Board name', required=True)
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-i', metavar=('START_INDEX', 'END_INDEX'), type=int, nargs=2, help="Start and end index")
+        group.add_argument('-t', metavar=('START_DATE', 'END_DATE'), type=str, nargs=2, help="Start and end date (YYMMDD)")
         group.add_argument('-a', metavar='ARTICLE_ID', help="Article ID")
         parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
-        if cmdline:
-            args = parser.parse_args(cmdline)
-        else:
-            args = parser.parse_args()
-        board = args.b
-        PTT_URL = 'https://www.ptt.cc'
+        args = parser.parse_args(cmdline) if cmdline else parser.parse_args()
+        self.url = 'https://www.ptt.cc'
+        self.__board = args.b
+        self.__dirname = os.path.join('data', self.__board)
+
+
         if args.i:
             start = args.i[0]
-            end = self.getLastPage(board) if args.i[1] == -1 else args.i[1]
+            end = self.getLastPage(self.__board) if args.i[1] == -1 else args.i[1]
 
             index = start
-            dirname = os.path.join('data', board)
             for i in range(end-start+1):
                 index = start + i
                 print('Processing index:', str(index))
                 resp = requests.get(
-                    url=PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
+                    url=self.url + '/bbs/' + self.__board + '/index' + str(index) + '.html',
                     cookies={'over18': '1'}, verify=VERIFY
                 )
                 if resp.status_code != 200:
@@ -61,25 +61,15 @@ class PttWebCrawler(object):
                 soup = BeautifulSoup(resp.text, 'html.parser')
                 divs = soup.find_all("div", "r-ent")
                 for div in divs:
-                    try:
-                        # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
-                        href = div.find('a')['href']
-                        link = PTT_URL + href
-                        article_id = re.sub('\.html', '', href.split('/')[-1])
-                        data = self.parse(link, article_id, board, out='dict')
-                        filename = os.path.join(dirname, self.pttftime(data['date']), str(article_id)+'.json')
-                        self.checkExist(filename)
-                        self.store(filename, json.dumps(data, sort_keys=True, ensure_ascii=False), 'a')
-                    except Exception as e:
-                        exc_type, exc_obj, exc_tb = sys.exc_info()
-                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                        print(exc_type, fname, exc_tb.tb_lineno)
+                    self.__parse_tools(div)
                 time.sleep(0.1)
-        else:  # args.a
+        elif args.a:
             article_id = args.a
-            link = PTT_URL + '/bbs/' + board + '/' + article_id + '.html'
-            filename = board + '-' + article_id + '.json'
-            self.store(filename, self.parse(link, article_id, board), 'w')
+            link = self.url + '/bbs/' + self.__board + '/' + article_id + '.html'
+            filename = self.__board + '-' + article_id + '.json'
+            self.store(filename, self.parse(link, article_id, self.__board), 'w')
+        else:
+            print('Please check the usage.')
 
     @staticmethod
     def pttftime(date):
@@ -182,6 +172,21 @@ class PttWebCrawler(object):
             return json.dumps(data, sort_keys=True, ensure_ascii=False)
         else:
             return data
+
+    def __parse_tools(self, tag):
+        try:
+            # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+            href = tag.find('a')['href']
+            link = self.url + href
+            article_id = re.sub('\.html', '', href.split('/')[-1])
+            data = self.parse(link, article_id, self.__board, out='dict')
+            filename = os.path.join(self.__dirname, self.pttftime(data['date']), str(article_id)+'.json')
+            self.checkExist(filename)
+            self.store(filename, json.dumps(data, sort_keys=True, ensure_ascii=False), 'a')
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print('{}::L:{}: {} {}'.format(fname, exc_tb.tb_lineno, exc_type, e))
 
     @staticmethod
     def getLastPage(board):
