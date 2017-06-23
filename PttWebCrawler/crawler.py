@@ -46,10 +46,13 @@ class PttWebCrawler(object):
 
         if args.i:
             start_page, end_page = args.i[0], args.i[1]
+        start_page = self.getLastPage(self.__board) if start_page == -1 else start_page
         end_page = self.getLastPage(self.__board) if end_page == -1 else end_page
 
         if args.t:
             start_date, end_date = (args.t[0], args.t[1])
+        start_date = self.getLastDate(self.__board) if start_date == '-1' else start_date
+        end_date = self.getLastDate(self.__board) if end_date == '-1' else end_date
 
         if args.a:
             article_id = args.a
@@ -229,6 +232,20 @@ class PttWebCrawler(object):
         if first_page is None:
             return 1
         return int(first_page.group(1)) + 1
+
+    @staticmethod
+    def getLastDate(board):
+        content = requests.get(
+            url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
+            cookies={'over18': '1'}
+        ).content.decode('utf-8')
+        soup = BeautifulSoup(content, 'lxml')
+        sep_line = soup.find('div', {'class': 'r-list-sep'})
+        latest_row = sep_line.find_previous_sibling('div')
+        latest_date = latest_row.find('div', {'class': 'date'})
+        latest_date = latest_date.text.strip(' ')
+        latest_date = datetime.strptime('{}/{}'.format(datetime.now().year, latest_date), '%Y/%m/%d')
+        return datetime.strftime(latest_date, '%Y%m%d')
 
     @staticmethod
     def store(filename, data, mode):
