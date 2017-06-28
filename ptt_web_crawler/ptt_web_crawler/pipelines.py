@@ -20,7 +20,8 @@ class PttWebCrawlerPipeline(object):
             os.makedirs(check_path)
 
         self.runtime_file = open(runtime_file, 'w+', encoding='utf8')
-        self.runtime_file.write('[\n')
+        self.runtime_file.write('[')
+        self.__runtime_file_first_item = True
 
     def close_spider(self, spider):
         '''
@@ -33,6 +34,11 @@ class PttWebCrawlerPipeline(object):
 
         if spider.article_id:
             runtime_file = spider.article_id + '.json'
+        elif spider.page_index:
+            begin_page, end_page = spider.page_index
+            runtime_file = '{}_page_{}_{}.json'.format(spider.board, begin_page, end_page)
+        else:
+            runtime_file = datetime.now().strftime('%Y%m%d') + '.json'
 
         new_filename = os.path.join(os.sep.join(check_path), runtime_file)
         os.rename(self.runtime_file.name, new_filename)
@@ -52,5 +58,11 @@ class PttWebCrawlerPipeline(object):
         if not isinstance(item, dict):
             item = dict(item)
 
-        self.runtime_file.write(json.dumps(item, ensure_ascii=False) + '\n')
+        if self.__runtime_file_first_item:
+            self.__runtime_file_first_item = False
+        else:
+            self.runtime_file.write(',\n')
+
+        self.runtime_file.write(json.dumps(item, ensure_ascii=False))
+
         return item

@@ -13,7 +13,13 @@ class PttWebSpider(scrapy.Spider):
     name = 'ptt-web'
     allowed_domains = ['ptt.cc']
 
-    def __init__(self, board=None, page=None, article_id=None, *args, **kwargs):
+    def __init__(self,
+                board=None,
+                page=None,
+                article_id=None,
+                max_requests=None,
+                *args, **kwargs):
+
         super(PttWebSpider, self).__init__(*args, **kwargs)
         self.__domain = 'https://www.ptt.cc'
         self.__request_retries = 0
@@ -21,24 +27,50 @@ class PttWebSpider(scrapy.Spider):
         self.__board = board or 'Gossiping'
         self.__article_id = article_id
         self.__page = None
+        self.__max_requests = None
 
         if page:
             page_index = page.split(',')
             if len(page_index) == 2 and all([i.isdigit() or i == '-1' for i in page_index]):
                 self.__page = (int(page_index[0]), int(page_index[1]))
 
+        if max_requests and max_requests.isdigit() and int(max_requests) > 0:
+            self.__max_requests = int(max_requests)
+
         self.url = '{}/bbs/{}/index.html'.format(self.__domain, self.__board)
         self.last_page_index = None
         self.last_page_date = None
 
     @property
+    def board(self):
+        return self.__board
+
+    @property
     def article_id(self):
         return self.__article_id
+
+    @property
+    def page_index(self):
+        return self.__page
 
     def start_requests(self):
         yield scrapy.Request(url=self.url,
                             callback=self.parse,
+                            errback=self.handle_errback,
                             cookies=self.__cookies)
+
+    def handle_errback(self, failure):
+        self.logger.error(repr(failure))
+
+        if failure.check(HttpError):
+            response = failure.value.response
+            self.logger.error('HttpError on %s', response.url)
+        elif failure.check(DNSLookupError):
+            request = failure.request
+            self.logger.error('DNSLookupError on %s', request.url)
+        elif failure.check(TimeoutError, TCPTimedOutError):
+            request = failure.request
+            self.logger.error('TimeoutError on %s', request.url)
 
     def parse(self, response):
 
@@ -48,7 +80,8 @@ class PttWebSpider(scrapy.Spider):
                 self.logger.warning('Retry {} times'.format(self.__request_retries))
                 yield FormRequest.from_response(response,
                                                 formdata={'yes': 'yes'},
-                                                callback=self.parse)
+                                                callback=self.parse,
+                                                errback=self.handle_errback)
             else:
                 self.logger.error('You cannot pass')
                 raise CloseSpider('You cannot pass over18-form')
@@ -57,12 +90,48 @@ class PttWebSpider(scrapy.Spider):
             self.last_page_index = self.get_last_page(response.body)
             self.last_page_date = self.get_last_date(response.body)
 
+            # crawling by article id
             if self.__article_id:
                 self.logger.info('Processing article {}'.format(self.__article_id))
                 url = '{}/bbs/{}/{}.html'.format(self.__domain, self.__board, self.__article_id)
                 yield scrapy.Request(url=url,
                                     callback=self.parse_article,
+                                    errback=self.handle_errback,
                                     cookies=self.__cookies)
+            # crawling by page index
+            else:
+                begin_page, end_page = 1, self.last_page_index
+
+                if self.__page:
+                    is_last = lambda x, y: x if x != -1 else y
+                    begin_page, end_page = self.__page
+                    begin_page = is_last(begin_page, self.last_page_index)
+                    begin_page = min(begin_page, self.last_page_index)
+                    end_page = is_last(end_page, self.last_page_index)
+                    end_page = min(end_page, self.last_page_index)
+
+                for i in range(begin_page, end_page+1):
+                    self.logger.info('Processing page {}'.format(i))
+                    url = '{}/bbs/{}/index{}.html'.format(self.__domain, self.__board, i)
+                    yield scrapy.Request(url=url,
+                                        callback=self.parse_page,
+                                        errback=self.handle_errback,
+                                        cookies=self.__cookies)
+
+    def parse_page(self, response):
+        soup = BeautifulSoup(response.body, 'lxml')
+        divs = soup.find_all("div", "r-ent")
+        for div in divs:
+            try:
+                # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+                url = '{}{}'.format(self.__domain, div.find('a')['href'])
+                article_id = re.sub('\.html', '', url.split('/')[-1])
+                yield scrapy.Request(url=url,
+                                    callback=self.parse_article,
+                                    errback=self.handle_errback,
+                                    cookies=self.__cookies)
+            except Exception as e:
+                self.logger.exception('{}'.format(e))
 
     def parse_article(self, response):
         data = PttWebCrawlerItem()
