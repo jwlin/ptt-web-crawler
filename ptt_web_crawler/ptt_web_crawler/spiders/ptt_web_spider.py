@@ -121,7 +121,10 @@ class PttWebSpider(scrapy.Spider):
     def parse_page(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
         divs = soup.find_all("div", "r-ent")
+        divs = soup.find_all('div', attrs={'class': ['r-ent', 'r-list-sep']})
         for div in divs:
+            if div['class'][0] == 'r-list-sep':
+                break
             try:
                 # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
                 url = '{}{}'.format(self.__domain, div.find('a')['href'])
