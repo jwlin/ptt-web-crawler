@@ -53,6 +53,13 @@
 
 會爬取 PublicServan 板文章 ID 為 M.1413618360.A.4F0 (https://www.ptt.cc/bbs/PublicServan/M.1413618360.A.4F0.html) 的內容，輸出至 `PublicServan-M.1413618360.A.4F0.json`
 
+### scrapy 範例
+
+    cd ptt_web_crawler
+    scrapy crawl ptt-web -a board=Gossiping -a article_id=M.1413618360.A.4F0
+    scrapy crawl ptt-web -a board=Gossiping -a page=100,200
+    scrapy crawl ptt-web -a board=Gossiping -a page=100,-1
+
 ### 測試
     python test.py
 
