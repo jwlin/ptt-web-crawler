@@ -33,7 +33,9 @@ class PttWebSpider(scrapy.Spider):
             dates = list(map(str.strip, dates))
             if len(dates) == 2:
                 # store datetime object
-                self.__date = (self.ISO8061_ptime(dates[0]), self.ISO8061_ptime(dates[1]))
+                begin_date = self.ISO8061_ptime(dates[0])
+                end_date = self.ISO8061_ptime(dates[1]) - dt.timedelta(days=1)
+                self.__date = (begin_date, end_date)
 
         if page:
             page_index = page.split(',')
