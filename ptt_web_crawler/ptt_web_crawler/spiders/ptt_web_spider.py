@@ -1,9 +1,12 @@
+import os
 import re
 import scrapy
+import datetime as dt
 
 from six import u
 from bs4 import BeautifulSoup
 from datetime import datetime
+from scrapy.conf import settings
 from scrapy.http import FormRequest
 from scrapy.exceptions import CloseSpider
 from ptt_web_crawler.items import PttWebCrawlerItem
@@ -13,12 +16,7 @@ class PttWebSpider(scrapy.Spider):
     name = 'ptt-web'
     allowed_domains = ['ptt.cc']
 
-    def __init__(self,
-                board=None,
-                page=None,
-                article_id=None,
-                max_requests=None,
-                *args, **kwargs):
+    def __init__(self, board=None, page=None, date=None, article_id=None, max_requests=None, *args, **kwargs):
 
         super(PttWebSpider, self).__init__(*args, **kwargs)
         self.__domain = 'https://www.ptt.cc'
@@ -27,19 +25,33 @@ class PttWebSpider(scrapy.Spider):
         self.__board = board or 'Gossiping'
         self.__article_id = article_id
         self.__page = None
+        self.__date = None
         self.__max_requests = None
+
+        if date:
+            dates = date.split(',')
+            dates = list(map(str.strip, dates))
+            if len(dates) == 2:
+                # store datetime object
+                self.__date = (self.ISO8061_ptime(dates[0]), self.ISO8061_ptime(dates[1]))
 
         if page:
             page_index = page.split(',')
+            page_index = list(map(str.strip, page_index))
             if len(page_index) == 2 and all([i.isdigit() or i == '-1' for i in page_index]):
-                self.__page = (int(page_index[0]), int(page_index[1]))
+                self.__page = (int(page_index[0].strip()), int(page_index[1]))
 
         if max_requests and max_requests.isdigit() and int(max_requests) > 0:
             self.__max_requests = int(max_requests)
 
         self.url = '{}/bbs/{}/index.html'.format(self.__domain, self.__board)
+        self.saved_repo = os.path.abspath(os.sep.join(['data', self.__board]))
         self.last_page_index = None
-        self.last_page_date = None
+        self.search_steps = None
+        self.search_index = None
+
+        if not os.path.exists(self.saved_repo):
+            os.makedirs(self.saved_repo)
 
     @property
     def board(self):
@@ -50,8 +62,53 @@ class PttWebSpider(scrapy.Spider):
         return self.__article_id
 
     @property
-    def page_index(self):
+    def crawl_date(self):
+        return self.__date
+
+    @property
+    def crawl_index(self):
         return self.__page
+
+    @staticmethod
+    def ptt_ptime(date_string):
+        try:
+            return datetime.strptime(date_string, '%a %b %d %H:%M:%S %Y')
+        except Exception as e:
+            self.logger.exception('{}'.format(e))
+
+    @staticmethod
+    def ISO8061_ptime(date_string):
+        try:
+            return datetime.strptime(date_string, '%Y%m%d')
+        except Exception as e:
+            self.logget.exception('{}'.format(e))
+
+    @staticmethod
+    def ISO8061_ftime(datetime_object):
+        try:
+            assert isinstance(datetime_object, dt.date)
+            return datetime_object.strftime('%Y%m%d')
+        except Exception as e:
+            self.logger.exception('{}'.format(e))
+
+    def request_by_index(self, index, cb, dont_filter=False):
+        assert isinstance(index, int)
+        self.logger.info('Processing page {}'.format(index))
+        url = '{}/bbs/{}/index{}.html'.format(self.__domain, self.__board, index)
+        return scrapy.Request(url=url,
+                            callback=cb,
+                            errback=self.handle_errback,
+                            cookies=self.__cookies,
+                            dont_filter=dont_filter)
+
+    def request_by_article_id(self, id, cb, dont_filter=False):
+        self.logger.info('Processing article {}'.format(id))
+        url = '{}/bbs/{}/{}.html'.format(self.__domain, self.__board, id)
+        return scrapy.Request(url=url,
+                            callback=cb,
+                            errback=self.handle_errback,
+                            cookies=self.__cookies,
+                            dont_filter=dont_filter)
 
     def start_requests(self):
         yield scrapy.Request(url=self.url,
@@ -87,17 +144,51 @@ class PttWebSpider(scrapy.Spider):
                 raise CloseSpider('You cannot pass over18-form')
         else:
 
-            self.last_page_index = self.get_last_page(response.body)
-            self.last_page_date = self.get_last_date(response.body)
+            if not self.last_page_index:
+                self.last_page_index = self.get_last_page(response.body)
+
+            first_date_in_page = self.get_nth_date_in_page(response.body, 0)
+            last_date_in_page = self.get_nth_date_in_page(response.body, -1)
 
             # crawling by article id
             if self.__article_id:
-                self.logger.info('Processing article {}'.format(self.__article_id))
-                url = '{}/bbs/{}/{}.html'.format(self.__domain, self.__board, self.__article_id)
-                yield scrapy.Request(url=url,
-                                    callback=self.parse_article,
-                                    errback=self.handle_errback,
-                                    cookies=self.__cookies)
+                yield self.request_by_article_id(self.__article_id, self.parse_article)
+
+            # crawling by article date
+            elif self.__date:
+
+                if not self.search_index:
+                    self.search_index = self.last_page_index
+                if not self.search_steps:
+                    self.search_steps = self.last_page_index
+
+                begin_date, end_date = self.__date
+
+                # binary search
+                if self.search_steps > 1:
+                    self.search_steps = int(self.search_steps/2)
+                    check_time_delta = first_date_in_page - begin_date
+
+                    if check_time_delta.days < 0:
+                        check_last_time = last_date_in_page - begin_date
+                        if check_last_time.days == 0:
+                            self.search_steps = 1
+                        # go foreward
+                        self.search_index += self.search_steps
+                        self.search_index = min(self.search_index, self.last_page_index)
+                    else:
+                        # go backward
+                        self.search_index -= self.search_steps
+                        self.search_index = max(self.search_index, 1)
+
+                    yield self.request_by_index(
+                        self.search_index, self.parse, dont_filter=True)
+
+                # crawling
+                else:
+                    yield self.request_by_index(
+                        self.search_index-1, self.parse_until_end_date)
+
             # crawling by page index
             else:
                 begin_page, end_page = 1, self.last_page_index
@@ -111,17 +202,60 @@ class PttWebSpider(scrapy.Spider):
                     end_page = min(end_page, self.last_page_index)
 
                 for i in range(begin_page, end_page+1):
-                    self.logger.info('Processing page {}'.format(i))
-                    url = '{}/bbs/{}/index{}.html'.format(self.__domain, self.__board, i)
-                    yield scrapy.Request(url=url,
-                                        callback=self.parse_page,
-                                        errback=self.handle_errback,
-                                        cookies=self.__cookies)
+                    yield self.request_by_index(i, self.parse_page)
+
+    def parse_until_end_date(self, response):
+        soup = BeautifulSoup(response.body, 'lxml')
+        divs = soup.find_all('div', attrs={'class': ['r-ent', 'r-list-sep']})
+        parse_next_page = False
+
+        try:
+            begin_date, end_date = self.__date
+        except Exception as e:
+            self.logger.exception('{}'.format(e))
+
+        for div in divs:
+            if div['class'][0] == 'r-list-sep':
+                break
+            try:
+                date = div.find_all('div', 'date')[0].text.strip()
+                date = datetime.strptime('{}/{}'.format(
+                    datetime.now().year ,date), '%Y/%m/%d')
+                check_begin_date = date - begin_date
+                check_end_date = end_date - date
+
+                if check_begin_date.days < 0 and check_end_date.days > 0:
+                    # before begin date
+                    if div == divs[-1]:
+                        parse_next_page = True
+                    continue
+                elif check_begin_date.days >= 0 and check_end_date.days >= 0:
+                    # in time duration
+                    if div == divs[-1]:
+                        parse_next_page = True
+                    url = '{}{}'.format(self.__domain, div.find('a')['href'])
+                    article_id = re.sub('\.html', '', url.split('/')[-1])
+                    yield self.request_by_article_id(article_id, self.parse_article)
+                elif check_begin_date.days > 0 and check_end_date.days < 0:
+                    # after end date
+                    parse_next_page = False
+                    break
+                else:
+                    parse_next_page = False
+                    pass
+
+            except Exception as e:
+                self.logger.exception('{}'.format(e))
+
+        self.logger.info('parse next page={}'.format(parse_next_page))
+        if parse_next_page:
+            self.search_index += 1
+            yield self.request_by_index(self.search_index, self.parse, dont_filter=True)
 
     def parse_page(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-        divs = soup.find_all("div", "r-ent")
         divs = soup.find_all('div', attrs={'class': ['r-ent', 'r-list-sep']})
+
         for div in divs:
             if div['class'][0] == 'r-list-sep':
                 break
@@ -129,6 +263,7 @@ class PttWebSpider(scrapy.Spider):
                 # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
                 url = '{}{}'.format(self.__domain, div.find('a')['href'])
                 article_id = re.sub('\.html', '', url.split('/')[-1])
+                self.logger.info('Processing article {}'.format(article_id))
                 yield scrapy.Request(url=url,
                                     callback=self.parse_article,
                                     errback=self.handle_errback,
@@ -238,7 +373,10 @@ class PttWebSpider(scrapy.Spider):
                                 content)
         return int(last_page.group(1)) + 1 if last_page else 1
 
-    def get_last_date(self, page_content):
+    def get_nth_date_in_page(self, page_content, n):
+        '''
+        return datetime object but year is unreliable
+        '''
         content = page_content.decode('utf-8')
         soup = BeautifulSoup(content, 'lxml')
 
@@ -246,13 +384,17 @@ class PttWebSpider(scrapy.Spider):
         year = datetime.now().year
         last_date = None
 
-        if not sep_line:
-            last_date = soup.select('div.date')[-1]
-        else:
-            # last page, last date
-            last_row = sep_line.find_previous_sibling('div')
-            last_date = last_row.find('div', {'class': 'date'})
+        try:
+            if not sep_line:
+                last_date = soup.select('div.date')[n]
+            else:
+                # last page, last date
+                last_row = sep_line.find_previous_sibling('div')
+                last_date = last_row.find('div', {'class': 'date'})
 
-        last_date = last_date.text.strip(' ')
-        last_date = datetime.strptime('{}/{}'.format(year, last_date), '%Y/%m/%d')
-        return datetime.strftime(last_date, '%Y%m%d')
+            last_date = last_date.text.strip(' ')
+            last_date = datetime.strptime('{}/{}'.format(year, last_date), '%Y/%m/%d')
+            return last_date
+
+        except Exception as e:
+            self.logger.excpetion('{}'.format(e))
