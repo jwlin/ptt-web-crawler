@@ -34,13 +34,19 @@ class PttWebCrawlerPipeline(object):
 
         if spider.article_id:
             runtime_file = spider.article_id + '.json'
-        elif spider.page_index:
-            begin_page, end_page = spider.page_index
+        elif spider.crawl_date:
+            begin_date, end_date = spider.crawl_date
+            begin_date = datetime.strftime(begin_date, '%Y%m%d')
+            end_date = datetime.strftime(end_date, '%Y%m%d')
+            runtime_file = begin_date + '_' + end_date + '.json'
+        elif spider.crawl_index:
+            begin_page, end_page = spider.crawl_index
             runtime_file = '{}_page_{}_{}.json'.format(spider.board, begin_page, end_page)
         else:
             runtime_file = datetime.now().strftime('%Y%m%d') + '.json'
 
         new_filename = os.path.join(os.sep.join(check_path), runtime_file)
+        new_filename = os.path.join(spider.saved_repo, new_filename.split(os.sep)[-1])
         os.rename(self.runtime_file.name, new_filename)
 
     def process_item(self, item, spider):
