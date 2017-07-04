@@ -33,9 +33,7 @@ class PttWebSpider(scrapy.Spider):
             dates = list(map(str.strip, dates))
             if len(dates) == 2:
                 # store datetime object
-                begin_date = self.ISO8061_ptime(dates[0])
-                end_date = self.ISO8061_ptime(dates[1]) - dt.timedelta(days=1)
-                self.__date = (begin_date, end_date)
+                self.__date = (self.ISO8061_ptime(dates[0]), self.ISO8061_ptime(dates[1]))
 
         if page:
             page_index = page.split(',')
@@ -149,9 +147,6 @@ class PttWebSpider(scrapy.Spider):
             if not self.last_page_index:
                 self.last_page_index = self.get_last_page(response.body)
 
-            first_date_in_page = self.get_nth_date_in_page(response.body, 0)
-            last_date_in_page = self.get_nth_date_in_page(response.body, -1)
-
             # crawling by article id
             if self.__article_id:
                 yield self.request_by_article_id(self.__article_id, self.parse_article)
@@ -165,14 +160,17 @@ class PttWebSpider(scrapy.Spider):
                     self.search_steps = self.last_page_index
 
                 begin_date, end_date = self.__date
+                end_date = end_date + dt.timedelta(days=1)
+                first_date_in_page = self.get_nth_date_in_page(response.body, 0)
+                last_date_in_page = self.get_nth_date_in_page(response.body, -1)
 
                 # binary search
                 if self.search_steps > 1:
                     self.search_steps = int(self.search_steps/2)
-                    check_time_delta = first_date_in_page - begin_date
+                    check_time_delta = first_date_in_page - end_date
 
                     if check_time_delta.days < 0:
-                        check_last_time = last_date_in_page - begin_date
+                        check_last_time = last_date_in_page - end_date
                         if check_last_time.days == 0:
                             self.search_steps = 1
                         # go foreward
@@ -189,7 +187,7 @@ class PttWebSpider(scrapy.Spider):
                 # crawling
                 else:
                     yield self.request_by_index(
-                        self.search_index-1, self.parse_until_end_date)
+                        self.search_index, self.parse_until_end_date)
 
             # crawling by page index
             else:
@@ -209,7 +207,7 @@ class PttWebSpider(scrapy.Spider):
     def parse_until_end_date(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
         divs = soup.find_all('div', attrs={'class': ['r-ent', 'r-list-sep']})
-        parse_next_page = False
+        parse_previous_page = False
 
         try:
             begin_date, end_date = self.__date
@@ -228,30 +226,30 @@ class PttWebSpider(scrapy.Spider):
 
                 if check_begin_date.days < 0 and check_end_date.days > 0:
                     # before begin date
-                    if div == divs[-1]:
-                        parse_next_page = True
+                    if div == divs[0]:
+                        parse_previous_page = False
                     continue
                 elif check_begin_date.days >= 0 and check_end_date.days >= 0:
                     # in time duration
-                    if div == divs[-1]:
-                        parse_next_page = True
+                    if div == divs[0]:
+                        parse_previous_page = True
                     url = '{}{}'.format(self.__domain, div.find('a')['href'])
                     article_id = re.sub('\.html', '', url.split('/')[-1])
                     yield self.request_by_article_id(article_id, self.parse_article)
                 elif check_begin_date.days > 0 and check_end_date.days < 0:
                     # after end date
-                    parse_next_page = False
-                    break
+                    parse_previous_page = True
+                    continue
                 else:
-                    parse_next_page = False
+                    parse_previous_page = False
                     pass
 
             except Exception as e:
                 self.logger.exception('{}'.format(e))
 
-        self.logger.info('parse next page={}'.format(parse_next_page))
-        if parse_next_page:
-            self.search_index += 1
+        self.logger.info('parse next page={}'.format(parse_previous_page))
+        if parse_previous_page:
+            self.search_index -= 1
             yield self.request_by_index(self.search_index, self.parse, dont_filter=True)
 
     def parse_page(self, response):
