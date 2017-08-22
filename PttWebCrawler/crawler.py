@@ -202,10 +202,10 @@ class PttWebCrawler(object):
             f.write(data)
 
     @staticmethod
-    def get(filename, mode):
+    def get(filename, mode='r'):
         with codecs.open(filename, mode, encoding='utf-8') as f:
             j = json.load(f)
-            print(j)
+            return j
 
 if __name__ == '__main__':
     c = PttWebCrawler()
