@@ -168,6 +168,7 @@ class PttWebCrawler(object):
 
         # json data
         data = {
+            'url': link,
             'board': board,
             'article_id': article_id,
             'article_title': title,
