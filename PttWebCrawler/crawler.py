@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
 import re
 import sys
 import json
@@ -54,9 +55,10 @@ class PttWebCrawler(object):
                 article_id = args.a
                 self.parse_article(article_id, board)
 
-    def parse_articles(self, start, end, board):
+    def parse_articles(self, start, end, board, path='.'):
             index = start
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
+            filename = os.path.join(path, filename)
             self.store(filename, u'{"articles": [', 'w')
             for i in range(end-start+1):
                 index = start + i
@@ -86,9 +88,10 @@ class PttWebCrawler(object):
             self.store(filename, u']}', 'a')
             return filename
 
-    def parse_article(self, article_id, board):
+    def parse_article(self, article_id, board, path='.'):
         link = self.PTT_URL + '/bbs/' + board + '/' + article_id + '.html'
         filename = board + '-' + article_id + '.json'
+        filename = os.path.join(path, filename)
         self.store(filename, self.parse(link, article_id, board), 'w')
         return filename
 
