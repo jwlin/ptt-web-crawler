@@ -55,7 +55,7 @@ class PttWebCrawler(object):
                 article_id = args.a
                 self.parse_article(article_id, board)
 
-    def parse_articles(self, start, end, board, path='.'):
+    def parse_articles(self, start, end, board, path='.', timeout=1):
             index = start
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
@@ -65,7 +65,7 @@ class PttWebCrawler(object):
                 print('Processing index:', str(index))
                 resp = requests.get(
                     url = self.PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
-                    cookies={'over18': '1'}, verify=VERIFY
+                    cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
                 )
                 if resp.status_code != 200:
                     print('invalid url:', resp.url)
@@ -96,9 +96,9 @@ class PttWebCrawler(object):
         return filename
 
     @staticmethod
-    def parse(link, article_id, board):
+    def parse(link, article_id, board, timeout=1):
         print('Processing article:', article_id)
-        resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY)
+        resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY, timeout=timeout)
         if resp.status_code != 200:
             print('invalid url:', resp.url)
             return json.dumps({"error": "invalid url"}, sort_keys=True, ensure_ascii=False)
@@ -186,10 +186,10 @@ class PttWebCrawler(object):
         return json.dumps(data, sort_keys=True, ensure_ascii=False)
 
     @staticmethod
-    def getLastPage(board):
+    def getLastPage(board, timeout=1):
         content = requests.get(
             url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
-            cookies={'over18': '1'}
+            cookies={'over18': '1'}, timeout=timeout
         ).content.decode('utf-8')
         first_page = re.search(r'href="/bbs/' + board + '/index(\d+).html">&lsaquo;', content)
         if first_page is None:
