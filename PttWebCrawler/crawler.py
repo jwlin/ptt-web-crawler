@@ -41,11 +41,9 @@ class PttWebCrawler(object):
         board = args.b
         PTT_URL = 'https://www.ptt.cc'
         if args.i:
-            start = args.i[0]
-            if args.i[1] == -1:
-                end = self.getLastPage(board)
-            else:
-                end = args.i[1]
+            last = self.getLastPage(board)
+            indexs = [i if i>=0 else last+i+1 for i in args.i]
+            start, end = sorted(indexs)
             index = start
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
             self.store(filename, u'{"articles": [', 'w')

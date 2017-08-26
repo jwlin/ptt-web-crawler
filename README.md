@@ -38,7 +38,7 @@
     }
 
 ### 執行方式
-    python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為 -1 則自動計算最後一頁) 
+    python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
     python crawler.py -b 看板名稱 -a 文章ID 
 
 ### 範例
