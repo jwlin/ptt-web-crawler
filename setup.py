@@ -19,7 +19,8 @@ setup(
         'argparse',
         'beautifulsoup4',
         'requests',
-        'six'
+        'six',
+        'pyOpenSSL'
     ],
     entry_points={
         'console_scripts': [
