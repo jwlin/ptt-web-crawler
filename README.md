@@ -74,6 +74,13 @@ c = PttWebCrawler(as_lib=True)
 c.parse_articles(100, 200, 'PublicServan')
 ```
 
+### scrapy 範例
+
+    cd ptt_web_crawler
+    scrapy crawl ptt-web -a board=Gossiping -a article_id=M.1413618360.A.4F0
+    scrapy crawl ptt-web -a board=Gossiping -a page=100,200
+    scrapy crawl ptt-web -a board=Gossiping -a page=100,-1
+
 ### 測試
 ```commandline
 python test.py
