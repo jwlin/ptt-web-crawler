@@ -10,7 +10,7 @@
 * 支援 Python 2.7 - 3.6
 
 輸出 JSON 格式
-```json
+```
 {
     "article_id": 文章 ID,
     "article_title": 文章標題 ,
