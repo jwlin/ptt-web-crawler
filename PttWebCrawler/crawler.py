@@ -1,4 +1,4 @@
-# vim: set ts=4 sw=4 et: -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -20,6 +20,7 @@ VERIFY = True
 if sys.version_info[0] < 3:
     VERIFY = False
     requests.packages.urllib3.disable_warnings()
+
 
 class PttWebCrawler(object):
 
@@ -55,8 +56,7 @@ class PttWebCrawler(object):
                 article_id = args.a
                 self.parse_article(article_id, board)
 
-    def parse_articles(self, start, end, board, path='.', timeout=1):
-            index = start
+    def parse_articles(self, start, end, board, path='.', timeout=3):
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
             self.store(filename, u'{"articles": [', 'w')
@@ -96,7 +96,7 @@ class PttWebCrawler(object):
         return filename
 
     @staticmethod
-    def parse(link, article_id, board, timeout=1):
+    def parse(link, article_id, board, timeout=3):
         print('Processing article:', article_id)
         resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY, timeout=timeout)
         if resp.status_code != 200:
@@ -186,7 +186,7 @@ class PttWebCrawler(object):
         return json.dumps(data, sort_keys=True, ensure_ascii=False)
 
     @staticmethod
-    def getLastPage(board, timeout=1):
+    def getLastPage(board, timeout=3):
         content = requests.get(
             url= 'https://www.ptt.cc/bbs/' + board + '/index.html',
             cookies={'over18': '1'}, timeout=timeout
@@ -204,8 +204,7 @@ class PttWebCrawler(object):
     @staticmethod
     def get(filename, mode='r'):
         with codecs.open(filename, mode, encoding='utf-8') as f:
-            j = json.load(f)
-            return j
+            return json.load(f)
 
 if __name__ == '__main__':
     c = PttWebCrawler()

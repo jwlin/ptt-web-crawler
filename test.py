@@ -1,7 +1,8 @@
-# vim: set ts=4 sw=4 et: -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import unittest
 from PttWebCrawler.crawler import PttWebCrawler as crawler
 import codecs, json, os
+
 
 class TestCrawler(unittest.TestCase):
     def test_parse(self):
@@ -43,7 +44,6 @@ class TestCrawler(unittest.TestCase):
         self.board = 'NBA'
 
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
-        #print jsondata
         self.assertEqual(jsondata['article_id'], self.article_id)
         self.assertEqual(jsondata['board'], self.board)
 
@@ -54,11 +54,12 @@ class TestCrawler(unittest.TestCase):
             data = json.load(f)
             # M.1127808641.A.C03.html is empty, so decrease 1 from 40 articles
             self.assertEqual(len(data['articles']), 39)
+        data = crawler.get(filename)
+        self.assertEqual(len(data['articles']), 39)
         os.remove(filename)
-	
+
     def test_getLastPage(self):
         boards = ['NBA', 'Gossiping', 'b994060work']  # b994060work for 6259fc0 (pull/6)
-
         for board in boards:
             try:
                 _ = crawler.getLastPage(board)

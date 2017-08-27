@@ -7,54 +7,77 @@
 * 支援單篇及多篇文章抓取
 * 過濾資料內空白、空行及特殊字元
 * JSON 格式輸出
-* 支援 Python 2.7 - 3.4
+* 支援 Python 2.7 - 3.6
 
 輸出 JSON 格式
+```json
+{
+    "article_id": 文章 ID,
+    "article_title": 文章標題 ,
+    "author": 作者,
+    "board": 板名,
+    "content": 文章內容,
+    "date": 發文時間,
+    "ip": 發文位址,
+    "message_conut": { # 推文
+        "all": 總數,
+        "boo": 噓文數,
+        "count": 推文數-噓文數,
+        "neutral": → 數,
+        "push": 推文數
+    },
+    "messages": [ # 推文內容
+      {
+        "push_content": 推文內容,
+        "push_ipdatetime": 推文時間及位址,
+        "push_tag": 推/噓/→ ,
+        "push_userid": 推文者 ID
+      },
+      ...
+      ]
+}
+```
 
-    {
-        "article_id": 文章 ID,
-        "article_title": 文章標題 ,
-        "author": 作者,
-        "board": 板名,
-        "content": 文章內容,
-        "date": 發文時間,
-        "ip": 發文位址,
-        "message_conut": { # 推文
-            "all": 總數,
-            "boo": 噓文數,
-            "count": 推文數-噓文數,
-            "neutral": → 數,
-            "push": 推文數
-        },
-        "messages": [ # 推文內容
-            {
-                "push_content": 推文內容,
-                "push_ipdatetime": 推文時間及位址,
-                "push_tag": 推/噓/→ ,
-                "push_userid": 推文者 ID
-            },
-            ...
-        ]
-    }
+### 參數說明
 
-### 執行方式
-    python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
-    python crawler.py -b 看板名稱 -a 文章ID 
+```commandline
+python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
+python crawler.py -b 看板名稱 -a 文章ID 
+```
 
 ### 範例
-    * 直接執行腳本:`python crawler.py -b PublicServan -i 100 200`
-    * 呼叫package:
-        * install:`python setup.py install`
-        * 直接:`python -m PttWebCrawler -b PublicServan -i 100 200`
 
-會爬取 PublicServan 板第 100 頁 (https://www.ptt.cc/bbs/PublicServan/index100.html) 到第 200 頁 (https://www.ptt.cc/bbs/PublicServan/index200.html) 的內容，輸出至 `PublicServan-100-200.json`
+爬取 PublicServan 板第 100 頁 (https://www.ptt.cc/bbs/PublicServan/index100.html) 
+到第 200 頁 (https://www.ptt.cc/bbs/PublicServan/index200.html) 的內容，
+輸出至 `PublicServan-100-200.json`
 
-    python crawler.py -b PublicServan -a M.1413618360.A.4F0
+* 直接執行腳本
 
-會爬取 PublicServan 板文章 ID 為 M.1413618360.A.4F0 (https://www.ptt.cc/bbs/PublicServan/M.1413618360.A.4F0.html) 的內容，輸出至 `PublicServan-M.1413618360.A.4F0.json`
+```commandline
+cd PttWebCrawler
+python crawler.py -b PublicServan -i 100 200
+```
+    
+* 呼叫 package
+
+```commandline
+python setup.py install
+python -m PttWebCrawler -b PublicServan -i 100 200
+```
+
+* 作為函式庫呼叫
+
+```python
+from PttWebCrawler.crawler import *
+
+c = PttWebCrawler(as_lib=True)
+c.parse_articles(100, 200, 'PublicServan')
+```
 
 ### 測試
-    python test.py
+```commandline
+python test.py
+```
 
 ***
 
