@@ -59,3 +59,4 @@ target/
 
 # user-defined
 data/
+*.json
