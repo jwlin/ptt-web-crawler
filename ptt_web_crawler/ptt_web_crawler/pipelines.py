@@ -13,13 +13,13 @@ from datetime import datetime
 class PttWebCrawlerPipeline(object):
 
     def open_spider(self, spider):
-        runtime_file = os.path.abspath('./.tmp.json.swp')
-        check_path = os.sep.join(runtime_file.split(os.sep)[:-1])
+        self.runtime_file = os.path.abspath('./.tmp.json.swp')
+        check_path = os.sep.join(self.runtime_file.split(os.sep)[:-1])
 
         if not os.path.exists(check_path):
             os.makedirs(check_path)
-
-        self.runtime_file = open(runtime_file, 'w+', encoding='utf8')
+        
+        self.runtime_file = open(self.runtime_file, 'w+', encoding='utf8')
         self.runtime_file.write('[')
         self.__runtime_file_first_item = True
 
@@ -31,6 +31,7 @@ class PttWebCrawlerPipeline(object):
         self.runtime_file.write(']')
         self.runtime_file.close()
         *check_path, runtime_file = self.runtime_file.name.split(os.sep)
+        #*check_path, runtime_file = self.runtime_file.split(os.sep)
 
         if spider.article_id:
             runtime_file = spider.article_id + '.json'
