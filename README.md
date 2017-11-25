@@ -1,4 +1,5 @@
-# ptt-web-crawler (PTT 網路版爬蟲) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
+# ptt-web-crawler (PTT 網路版爬蟲) ([English](#english_desc)) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
+
 
 ### [Live demo](http://app.castman.net/ptt-web-crawler)
 
@@ -81,7 +82,7 @@ python test.py
 
 ***
 
-ptt-web-crawler is a crawler for the web version of PTT, the largest online community in Taiwan. 
+<a name="english_desc"></a>ptt-web-crawler is a crawler for the web version of PTT, the largest online community in Taiwan. 
 
     usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -a ARTICLE_ID) [-v]
     optional arguments:
