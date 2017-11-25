@@ -1,6 +1,6 @@
-# ptt-web-crawler (PTT 網路版爬蟲) ([English](#english_desc)) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
+# ptt-web-crawler (PTT 網路版爬蟲) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
 
-
+### [English Readme](#english_desc)
 ### [Live demo](http://app.castman.net/ptt-web-crawler)
 
 特色
