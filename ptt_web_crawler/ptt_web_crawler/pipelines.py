@@ -18,7 +18,7 @@ class PttWebCrawlerPipeline(object):
 
         if not os.path.exists(check_path):
             os.makedirs(check_path)
-        
+
         self.runtime_file = open(self.runtime_file, 'w+', encoding='utf8')
         self.runtime_file.write('[')
         self.__runtime_file_first_item = True
@@ -35,12 +35,12 @@ class PttWebCrawlerPipeline(object):
 
         if spider.article_id:
             runtime_file = spider.article_id + '.json'
-        elif spider.crawl_date:
-            begin_date, end_date = spider.crawl_date
+        elif spider.dates:
+            begin_date, end_date = spider.dates
             begin_date = datetime.strftime(begin_date, '%Y%m%d')
             end_date = datetime.strftime(end_date, '%Y%m%d')
             runtime_file = begin_date + '_' + end_date + '.json'
-        elif spider.crawl_index:
+        elif spider.pages:
             begin_page, end_page = spider.crawl_index
             runtime_file = '{}_page_{}_{}.json'.format(spider.board, begin_page, end_page)
         else:

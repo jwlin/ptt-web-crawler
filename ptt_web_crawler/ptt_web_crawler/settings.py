@@ -93,4 +93,4 @@ ITEM_PIPELINES = {
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.RFC2616Policy'
 
 # user defined constant
-REQUEST_RETRY_MAX = 5
+REQUEST_RETRY_MAX = 10
