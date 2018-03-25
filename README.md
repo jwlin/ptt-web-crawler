@@ -20,7 +20,7 @@
     "content": 文章內容,
     "date": 發文時間,
     "ip": 發文位址,
-    "message_conut": { # 推文
+    "message_count": { # 推文
         "all": 總數,
         "boo": 噓文數,
         "count": 推文數-噓文數,

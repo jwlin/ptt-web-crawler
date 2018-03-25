@@ -179,7 +179,7 @@ class PttWebCrawler(object):
             'date': date,
             'content': content,
             'ip': ip,
-            'message_conut': message_count,
+            'message_count': message_count,
             'messages': messages
         }
         # print 'original:', d
