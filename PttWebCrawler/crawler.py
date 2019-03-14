@@ -37,6 +37,7 @@ class PttWebCrawler(object):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-i', metavar=('START_INDEX', 'END_INDEX'), type=int, nargs=2, help="Start and end index")
         group.add_argument('-a', metavar='ARTICLE_ID', help="Article ID")
+        group.add_argument('-k', metavar='KEYWORD', help="Search for keyword")
         parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
         if not as_lib:
@@ -52,9 +53,47 @@ class PttWebCrawler(object):
                 else:
                     end = args.i[1]
                 self.parse_articles(start, end, board)
+
+            elif args.k:
+                keyword = args.k
+                self.parse_keyword(keyword, board)
+                
             else:  # args.a
                 article_id = args.a
                 self.parse_article(article_id, board)
+
+    def parse_keyword(self, keyword, board, path='.', timeout=3):
+            filename = board + '-' + str(keyword) + '.json'
+            filename = os.path.join(path, filename)
+            self.store(filename, u'{"articles": [', 'w')
+            for index in range(self.getLastPage(board)):
+                print('Processing index:', str(index))                
+                resp = requests.get(               
+                    url = self.PTT_URL + '/bbs/' + board + '/search?page=' + str(index) + '&q=' + str(keyword),
+                    cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
+                )
+                if resp.status_code != 200:
+                    print('invalid url:', resp.url)
+                    continue
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                divs = soup.find_all("div", "r-ent")
+                for div in divs:
+                    try:
+                        # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+                        href = div.find('a')['href']
+                        link = self.PTT_URL + href
+                        article_id = re.sub('\.html', '', href.split('/')[-1])
+                        if div == divs[-1] and index == self.getLastPage(board)+1:  # last div of last page
+                            self.store(filename, self.parse(link, article_id, board), 'a')
+                        else:
+                            self.store(filename, self.parse(link, article_id, board) + ',\n', 'a')
+                    except:
+                        pass
+                time.sleep(0.1)
+
+            self.store(filename, u']}', 'a')
+            return filename
+
 
     def parse_articles(self, start, end, board, path='.', timeout=3):
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
@@ -62,8 +101,8 @@ class PttWebCrawler(object):
             self.store(filename, u'{"articles": [', 'w')
             for i in range(end-start+1):
                 index = start + i
-                print('Processing index:', str(index))
-                resp = requests.get(
+                print('Processing index:', str(index))                
+                resp = requests.get(               
                     url = self.PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
                     cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
                 )
