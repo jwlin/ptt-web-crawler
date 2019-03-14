@@ -1,17 +1,64 @@
-# ptt-web-crawler (PTT 網路版爬蟲) [![Build Status](https://travis-ci.org/jwlin/ptt-web-crawler.svg?branch=master)](https://travis-ci.org/jwlin/ptt-web-crawler)
+# ptt-web-crawler 
 
-### [English Readme](#english_desc)
-### [Live demo](http://app.castman.net/ptt-web-crawler)
-### [Scrapy 版本](https://github.com/afunTW/ptt-web-crawler) by afunTW
+This repository is a crawler for the web version of PTT, the largest online community in Taiwan. 
 
-特色
+### License
+MIT 
 
-* 支援單篇及多篇文章抓取
+Forked from [jwlin](https://github.com/jwlin/ptt-web-crawler)
+
+References include [CrawlerTutorial](https://github.com/leVirve/CrawlerTutorial#advanced) by leVirve
+
+### Usage
+
+    usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -k KEYWORD | -a ARTICLE_ID) [-v]
+    
+    optional arguments:
+      -h, --help                  show this help message and exit
+      -b BOARD_NAME               Board name
+      -i START_INDEX END_INDEX    Start and end index
+      -k KEYWORD                  Search for keyword
+      -a ARTICLE_ID               Article ID
+      -v, --version               show program's version number and exit
+
+Output file name formats:
+
+* `BOARD_NAME-START_INDEX-END_INDEX.json`
+* `BOARD_NAME-KEYWORD.json`
+* `BOARD_NAME-ID.json`
+
+### Required Packages
+pip install
+
+* argparse
+* beautifulsoup4
+* requests
+* six
+* pyOpenSSL
+
+## 特色
+
+* 支援單篇及多篇文章抓取、關鍵字搜尋
 * 過濾資料內空白、空行及特殊字元
 * JSON 格式輸出
 * 支援 Python 2.7, 3.4-3.6
 
-輸出 JSON 格式
+
+## 操作說明
+
+### 測試
+```commandline
+python test.py
+```
+
+### 參數
+```commandline
+python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
+python crawler.py -b 看板名稱 -k 關鍵字
+python crawler.py -b 看板名稱 -a 文章 ID 
+```
+
+### 輸出格式
 ```
 {
     "article_id": 文章 ID,
@@ -40,18 +87,12 @@
 }
 ```
 
-### 參數說明
 
-```commandline
-python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
-python crawler.py -b 看板名稱 -a 文章ID 
-```
+## 範例
 
-### 範例
+### 頁面索引
 
-爬取 PublicServan 板第 100 頁 (https://www.ptt.cc/bbs/PublicServan/index100.html) 
-到第 200 頁 (https://www.ptt.cc/bbs/PublicServan/index200.html) 的內容，
-輸出至 `PublicServan-100-200.json`
+爬取 PublicServan 板第 100 頁到第 200 頁的所有文章。
 
 * 直接執行腳本
 
@@ -76,21 +117,66 @@ c = PttWebCrawler(as_lib=True)
 c.parse_articles(100, 200, 'PublicServan')
 ```
 
-### 測試
+資料內容會輸出至 `PublicServan-100-200.json`
+
+### 關鍵字搜尋
+
+爬取 Gossiping 板中所有標題有「罷工」一詞的所有文章。
+
+* 直接執行腳本
+
 ```commandline
-python test.py
+cd PttWebCrawler
+python crawler.py -b Gossiping -k 罷工
+```
+    
+* 呼叫 package
+
+```commandline
+python setup.py install
+python -m PttWebCrawler -b Gossiping -k 罷工
 ```
 
-***
+* 作為函式庫呼叫
 
-<a name="english_desc"></a>ptt-web-crawler is a crawler for the web version of PTT, the largest online community in Taiwan. 
+```python
+from PttWebCrawler.crawler import *
 
-    usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -a ARTICLE_ID) [-v]
-    optional arguments:
-      -h, --help                  show this help message and exit
-      -b BOARD_NAME               Board name
-      -i START_INDEX END_INDEX    Start and end index
-      -a ARTICLE_ID               Article ID
-      -v, --version               show program's version number and exit
+c = PttWebCrawler(as_lib=True)
+c.parse_keyword('罷工', 'Gossiping')
+```
 
-Output would be `BOARD_NAME-START_INDEX-END_INDEX.json` (or `BOARD_NAME-ID.json`)
+後續 index 皆重複出現 invalid url 時以 ctrl + C 終止 Python 程序，資料內容會輸出至 `Gossiping-罷工.json`
+
+
+### 單篇文章 ID
+已知該文章網址，欲下載該篇內容並格式化所撈取的資料。
+
+**注意：並非井字號文章代碼，而是網址中用於區辨文章的部分**
+
+以 https://www.ptt.cc/bbs/Gossiping/M.1550896718.A.6C7.html 為例
+
+* 直接執行腳本
+
+```commandline
+cd PttWebCrawler
+python crawler.py -b Gossiping -a M.1550896718.A.6C7
+```
+    
+* 呼叫 package
+
+```commandline
+python setup.py install
+python -m PttWebCrawler -b Gossiping -a M.1550896718.A.6C7
+```
+
+* 作為函式庫呼叫
+
+```python
+from PttWebCrawler.crawler import *
+
+c = PttWebCrawler(as_lib=True)
+c.parse_article('M.1550896718.A.6C7', 'Gossiping')
+```
+
+資料內容會輸出至 `Gossiping-M.1550896718.A.6C7.json`
