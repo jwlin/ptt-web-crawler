@@ -83,7 +83,8 @@ python crawler.py -b 看板名稱 -a 文章 ID
         "push_userid": 推文者 ID
       },
       ...
-      ]
+      ],
+    "url": 文章網址
 }
 ```
 
