@@ -43,7 +43,7 @@
 ### 參數說明
 
 ```commandline
-python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
+python crawler.py -b 看板名稱 [-s 標題關鍵字搜尋] -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
 python crawler.py -b 看板名稱 -a 文章ID 
 ```
 
@@ -89,6 +89,7 @@ python test.py
     optional arguments:
       -h, --help                  show this help message and exit
       -b BOARD_NAME               Board name
+      -s SEARCH_TITLE             Search article title by keyword
       -i START_INDEX END_INDEX    Start and end index
       -a ARTICLE_ID               Article ID
       -v, --version               show program's version number and exit

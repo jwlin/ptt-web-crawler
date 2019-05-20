@@ -25,6 +25,7 @@ if sys.version_info[0] < 3:
 class PttWebCrawler(object):
 
     PTT_URL = 'https://www.ptt.cc'
+    SEARCH_TITLE = None
 
     """docstring for PttWebCrawler"""
     def __init__(self, cmdline=None, as_lib=False):
@@ -34,6 +35,7 @@ class PttWebCrawler(object):
             Output: BOARD_NAME-START_INDEX-END_INDEX.json (or BOARD_NAME-ID.json)
         ''')
         parser.add_argument('-b', metavar='BOARD_NAME', help='Board name', required=True)
+        parser.add_argument('-s', metavar='SEARCH_TITLE', help="Search Title")
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-i', metavar=('START_INDEX', 'END_INDEX'), type=int, nargs=2, help="Start and end index")
         group.add_argument('-a', metavar='ARTICLE_ID', help="Article ID")
@@ -45,6 +47,10 @@ class PttWebCrawler(object):
             else:
                 args = parser.parse_args()
             board = args.b
+
+            if args.s:
+                self.SEARCH_TITLE = args.s
+
             if args.i:
                 start = args.i[0]
                 if args.i[1] == -1:
@@ -57,16 +63,26 @@ class PttWebCrawler(object):
                 self.parse_article(article_id, board)
 
     def parse_articles(self, start, end, board, path='.', timeout=3):
-            filename = board + '-' + str(start) + '-' + str(end) + '.json'
+            if self.SEARCH_TITLE:
+                filename = board + '-' + self.SEARCH_TITLE + '-' + str(start) + '-' + str(end) + '.json'
+            else:
+                filename = board + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
             self.store(filename, u'{"articles": [', 'w')
             for i in range(end-start+1):
                 index = start + i
                 print('Processing index:', str(index))
-                resp = requests.get(
-                    url = self.PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
-                    cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
-                )
+                if self.SEARCH_TITLE:
+                    resp = requests.get(
+                        url = self.PTT_URL + '/bbs/' + board + '/search', params={'q': self.SEARCH_TITLE},
+                        cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
+                    )
+                else:
+                    resp = requests.get(
+                        url = self.PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
+                        cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
+                    )
+
                 if resp.status_code != 200:
                     print('invalid url:', resp.url)
                     continue
