@@ -21,12 +21,11 @@ if sys.version_info[0] < 3:
     VERIFY = False
     requests.packages.urllib3.disable_warnings()
 
-
 class PttWebCrawler(object):
 
     PTT_URL = 'https://www.ptt.cc'
     SEARCH_TITLE = None
-
+    
     """docstring for PttWebCrawler"""
     def __init__(self, cmdline=None, as_lib=False):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
@@ -68,7 +67,7 @@ class PttWebCrawler(object):
             else:
                 filename = board + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
-            self.store(filename, u'{"articles": [', 'w')
+            self.store(filename, u'[', 'w')
             for i in range(end-start+1):
                 index = start + i
                 print('Processing index:', str(index))
@@ -101,7 +100,7 @@ class PttWebCrawler(object):
                     except:
                         pass
                 time.sleep(0.1)
-            self.store(filename, u']}', 'a')
+            self.store(filename, u']', 'a')
             return filename
 
     def parse_article(self, article_id, board, path='.'):
