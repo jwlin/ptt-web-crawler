@@ -42,7 +42,7 @@ class JsonPaser:
         __ITEM_DETAIL__ = '詳細說明 '
         data = []
 
-        with open(self.IN_FILE, newline='') as csvfile:
+        with open('output.csv', newline='') as csvfile:
             rows = csv.reader(csvfile)
             fo = open(self.OUT_FILE, 'w')
 
