@@ -96,6 +96,26 @@ class PttWebCrawler(object):
         return filename
 
     @staticmethod
+    def decrypt_protected_email(data):
+        try:
+            r = int(data[:2],16)
+            email = ''.join([chr(int(data[i:i+2], 16) ^ r) for i in range(2, len(data), 2)])
+            return email
+        except (ValueError):
+            return ''
+
+    @staticmethod
+    def parse_meta(meta):
+        protected_emails = meta.select(".__cf_email__")
+
+        for protected_email in protected_emails:
+            protected_email_data = protected_email["data-cfemail"]
+            email_data = PttWebCrawler.decrypt_protected_email(protected_email_data)
+            protected_email.replaceWith(email_data)
+
+        return meta.text
+
+    @staticmethod
     def parse(link, article_id, board, timeout=3):
         print('Processing article:', article_id)
         resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY, timeout=timeout)
@@ -109,9 +129,9 @@ class PttWebCrawler(object):
         title = ''
         date = ''
         if metas:
-            author = metas[0].select('span.article-meta-value')[0].string if metas[0].select('span.article-meta-value')[0] else author
-            title = metas[1].select('span.article-meta-value')[0].string if metas[1].select('span.article-meta-value')[0] else title
-            date = metas[2].select('span.article-meta-value')[0].string if metas[2].select('span.article-meta-value')[0] else date
+            author = PttWebCrawler.parse_meta(metas[0].select('span.article-meta-value')[0])
+            title = PttWebCrawler.parse_meta(metas[1].select('span.article-meta-value')[0])
+            date = PttWebCrawler.parse_meta(metas[2].select('span.article-meta-value')[0])
 
             # remove meta nodes
             for meta in metas:
