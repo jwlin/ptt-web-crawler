@@ -39,9 +39,9 @@ class TestCrawler(unittest.TestCase):
         self.assertEqual(jsondata['board'], self.board)
 
     def test_parse_without_metalines(self):
-        self.link = 'https://www.ptt.cc/bbs/NBA/M.1432438578.A.4B0.html'
-        self.article_id = 'M.1432438578.A.4B0'
-        self.board = 'NBA'
+        self.link = 'https://www.ptt.cc/bbs/MacShop/M.1710908255.A.871.html'
+        self.article_id = 'M.1710908255.A.871'
+        self.board = 'MacShop'
 
         jsondata = json.loads(crawler.parse(self.link, self.article_id, self.board))
         self.assertEqual(jsondata['article_id'], self.article_id)
