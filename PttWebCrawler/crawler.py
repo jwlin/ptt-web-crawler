@@ -125,7 +125,7 @@ class PttWebCrawler(object):
             push.extract()
 
         try:
-            ip = main_content.find(text=re.compile(u'※ 發信站:'))
+            ip = main_content.find(string=re.compile(u'※ 發信站:'))
             ip = re.search('[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*', ip).group()
         except:
             ip = "None"
