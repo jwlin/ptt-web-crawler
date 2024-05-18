@@ -1,5 +1,0 @@
-argparse
-beautifulsoup4
-requests
-six
-pyOpenSSL
