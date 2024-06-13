@@ -120,7 +120,12 @@ class PttWebCrawler(object):
                 meta.extract()
 
         # remove and keep push nodes
-        pushes = main_content.find_all('div', class_='push')
+        # pushes should be after '※ 文章網址' span, those before this span might be the signature of article author.
+        span_before_pushes = main_content.find(text=re.compile(u'※ 文章網址:'))
+        if span_before_pushes:
+            pushes = span_before_pushes.find_all_next('div', class_='push')
+        else:
+            pushes = main_content.find_all('div', class_='push')
         for push in pushes:
             push.extract()
 
